@@ -11,7 +11,7 @@ import com.google.inject.Injector;
 
 public class PgpEncryption {
 
-    private static final Logger LOGGER = LogManager.getLogger(PgpEncryption.class);
+    private static final Logger PLAIN_LOGGER = LogManager.getLogger("plain_logger");
 
     public static void main(String... args) {
         if (args == null || args.length < 2) {
@@ -44,26 +44,26 @@ public class PgpEncryption {
                 processor.decryptFile(key, file);
 
             } else {
-                LOGGER.error("Unrecognized parameters.");
+                PLAIN_LOGGER.error("Unrecognized parameters.");
                 printUsage();
             }
 
         } catch (Exception e) {
-            LOGGER.error("An error was thrown during process.");
+            PLAIN_LOGGER.error("An error was thrown during process.");
             String message = e.getMessage();
             if (message != null && message.length() > 0) {
-                LOGGER.error("  -> " + message);
+                PLAIN_LOGGER.error("  -> " + message);
             }
             printUsage();
         }
     }
 
     private static void printUsage() {
-        LOGGER.error("Usage:");
-        LOGGER.error("  -c [output folder]: Create keys into output folder.");
-        LOGGER.error("  -e [key]: Encrypt file with key. Used in combination with -f.");
-        LOGGER.error("  -d [key]: Decrypt file with key. Used in combination with -f.");
-        LOGGER.error("  -f [input file]: Given file to encrypt or decrypt.");
+        PLAIN_LOGGER.error("Usage:");
+        PLAIN_LOGGER.error("  -c [output folder]: Create keys into output folder.");
+        PLAIN_LOGGER.error("  -e [key]: Encrypt file with key. Used in combination with -f.");
+        PLAIN_LOGGER.error("  -d [key]: Decrypt file with key. Used in combination with -f.");
+        PLAIN_LOGGER.error("  -f [input file]: Given file to encrypt or decrypt.");
     }
 
 }

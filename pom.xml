@@ -69,7 +69,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.plytimebandit.tools.pgp.PgpEncryption</mainClass>
+                            <mainClass>org.plytimebandit.tools.pgpencryption.PgpEncryption</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
