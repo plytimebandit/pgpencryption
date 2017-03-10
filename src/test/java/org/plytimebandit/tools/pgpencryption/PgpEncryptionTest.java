@@ -81,6 +81,8 @@ public class PgpEncryptionTest {
         String actual = new String(Hex.decodeHex(dataInHex.toCharArray()));
 
         Assertions.assertThat(actual).isEqualTo(testString);
+        Assertions.assertThat(dataInHex).isNotEqualTo(actual);
+        Assertions.assertThat(dataInHex).isNotEqualTo(testString);
     }
 
 
