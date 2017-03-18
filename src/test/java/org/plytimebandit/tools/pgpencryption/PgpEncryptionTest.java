@@ -12,8 +12,10 @@ import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.plytimebandit.tools.pgpencryption.sys.KeyTool;
@@ -85,6 +87,19 @@ public class PgpEncryptionTest {
         Assertions.assertThat(dataInHex).isNotEqualTo(testString);
     }
 
+    @Test
+    public void testRealFileWithBigBlockSizeEncryptionDecryption() throws Exception {
+        File file = new File(getClass().getResource("jls7.pdf").toURI());
+
+        KeyPair keyPair = keyTool.createKeyPair();
+
+        String encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
+        String decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
+
+        String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+
+        Assert.assertEquals(decryptedData, fileContent);
+    }
 
     private File writePrivateKeyToFile(KeyPair keyPair) throws IOException {
         String privateKey = keyTool.getPrivateKey(keyPair);
