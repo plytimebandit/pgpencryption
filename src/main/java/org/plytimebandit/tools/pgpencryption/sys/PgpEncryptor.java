@@ -63,29 +63,37 @@ public class PgpEncryptor {
         encoding.init(true, publicKey);
 
         byte[] readableTextBytes = readableText.getBytes(StandardCharsets.UTF_8);
+
+        if (readableTextBytes.length <= encoding.getInputBlockSize()) {
+            return execAllBytesAtOnce(encoding);
+        } else {
+            return execBytesInSingleSteps(encoding, readableTextBytes);
+        }
+    }
+
+    private String execBytesInSingleSteps(PKCS1Encoding encoding, byte[] readableTextBytes) throws InvalidCipherTextException {
         int bufferSize = encoding.getInputBlockSize();
 
-        if (readableTextBytes.length <= bufferSize) {
+        Byte[] bytes = ArrayUtils.toObject(readableTextBytes);
+        List<List<Byte>> partition = Lists.partition(Arrays.asList(bytes), bufferSize);
+
+        List<Byte> result = new ArrayList<>();
+
+        for (List<Byte> byteList : partition) {
+            Byte[] objects = byteList.toArray(new Byte[byteList.size()]);
             byte[] hexEncodedCipher = encoding.processBlock(
-                    readableText.getBytes(StandardCharsets.UTF_8), 0, readableText.length());
-            return Hex.encodeHexString(hexEncodedCipher);
-
-        } else {
-            Byte[] bytes = ArrayUtils.toObject(readableTextBytes);
-            List<List<Byte>> partition = Lists.partition(Arrays.asList(bytes), bufferSize);
-
-            List<Byte> result = new ArrayList<>();
-
-            for (List<Byte> byteList : partition) {
-                Byte[] objects = byteList.toArray(new Byte[byteList.size()]);
-                byte[] hexEncodedCipher = encoding.processBlock(
-                        ArrayUtils.toPrimitive(objects), 0, Math.min(bufferSize, byteList.size()));
-                result.addAll(Arrays.asList(ArrayUtils.toObject(hexEncodedCipher)));
-            }
-
-            byte[] primitiveResult = ArrayUtils.toPrimitive(result.toArray(new Byte[result.size()]));
-            return Hex.encodeHexString(primitiveResult);
+                    ArrayUtils.toPrimitive(objects), 0, Math.min(bufferSize, byteList.size()));
+            result.addAll(Arrays.asList(ArrayUtils.toObject(hexEncodedCipher)));
         }
+
+        byte[] primitiveResult = ArrayUtils.toPrimitive(result.toArray(new Byte[result.size()]));
+        return Hex.encodeHexString(primitiveResult);
+    }
+
+    private String execAllBytesAtOnce(PKCS1Encoding encoding) throws InvalidCipherTextException {
+        byte[] hexEncodedCipher = encoding.processBlock(
+                readableText.getBytes(StandardCharsets.UTF_8), 0, readableText.length());
+        return Hex.encodeHexString(hexEncodedCipher);
     }
 
 }

@@ -99,6 +99,8 @@ public class PgpEncryptionTest {
         String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 
         Assert.assertEquals(decryptedData, fileContent);
+        Assert.assertNotEquals(encryptedData, fileContent);
+        Assert.assertNotEquals(encryptedData, decryptedData);
     }
 
     private File writePrivateKeyToFile(KeyPair keyPair) throws IOException {

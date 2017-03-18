@@ -63,27 +63,34 @@ public class PgpDecryptor {
         encoding.init(false, privateKey);
 
         byte[] messageBytes = Hex.decodeHex(encryptedText.toCharArray());
+
+        if (messageBytes.length <= encoding.getInputBlockSize()) {
+            return execAllBytesAtOnce(encoding, messageBytes);
+        } else {
+            return execBytesInSingleSteps(encoding, messageBytes);
+        }
+    }
+
+    private String execBytesInSingleSteps(PKCS1Encoding encoding, byte[] messageBytes) throws InvalidCipherTextException {
         int bufferSize = encoding.getInputBlockSize();
 
+        Byte[] bytes = ArrayUtils.toObject(messageBytes);
+        List<List<Byte>> partition = Lists.partition(Arrays.asList(bytes), bufferSize);
 
-        if (messageBytes.length <= bufferSize) {
-            byte[] decryptedData = encoding.processBlock(messageBytes, 0, messageBytes.length);
-            return new String(decryptedData, StandardCharsets.UTF_8);
+        StringBuilder result = new StringBuilder();
 
-        } else {
-            Byte[] bytes = ArrayUtils.toObject(messageBytes);
-            List<List<Byte>> partition = Lists.partition(Arrays.asList(bytes), bufferSize);
-
-            StringBuilder result = new StringBuilder();
-
-            for (List<Byte> byteList : partition) {
-                Byte[] objects = byteList.toArray(new Byte[byteList.size()]);
-                byte[] decryptedData = encoding.processBlock(
-                        ArrayUtils.toPrimitive(objects), 0, Math.min(bufferSize, byteList.size()));
-                result.append(new String(decryptedData, StandardCharsets.UTF_8));
-            }
-
-            return result.toString();
+        for (List<Byte> byteList : partition) {
+            Byte[] objects = byteList.toArray(new Byte[byteList.size()]);
+            byte[] decryptedData = encoding.processBlock(
+                    ArrayUtils.toPrimitive(objects), 0, Math.min(bufferSize, byteList.size()));
+            result.append(new String(decryptedData, StandardCharsets.UTF_8));
         }
+
+        return result.toString();
+    }
+
+    private String execAllBytesAtOnce(PKCS1Encoding encoding, byte[] messageBytes) throws InvalidCipherTextException {
+        byte[] decryptedData = encoding.processBlock(messageBytes, 0, messageBytes.length);
+        return new String(decryptedData, StandardCharsets.UTF_8);
     }
 }
