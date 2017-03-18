@@ -89,7 +89,7 @@ public class PgpEncryptionTest {
 
     @Test
     public void testRealFileWithBigBlockSizeEncryptionDecryption() throws Exception {
-        File file = new File(getClass().getResource("jls7.pdf").toURI());
+        File file = new File(getClass().getResource("test.txt").toURI());
 
         KeyPair keyPair = keyTool.createKeyPair();
 
