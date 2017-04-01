@@ -3,8 +3,10 @@ package org.plytimebandit.tools.pgpencryption.sys;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 
 import javax.inject.Inject;
 
@@ -17,10 +19,10 @@ public class KeyTool {
     private int keySize;
     private String algorithm;
 
-    @Inject
-    public KeyPair createKeyPair() throws NoSuchAlgorithmException {
+    public KeyPair createKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm);
-        generator.initialize(keySize);
+        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG", "SUN");
+        generator.initialize(keySize, secureRandom);
         return generator.generateKeyPair();
     }
 

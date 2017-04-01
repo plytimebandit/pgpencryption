@@ -7,17 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.RSAKey;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +56,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testUseKeysStoredInFiles() throws IOException, NoSuchAlgorithmException, InvalidCipherTextException, DecoderException {
+    public void testUseKeysStoredInFiles() throws Exception {
         KeyPair keyPair = keyTool.createKeyPair();
         File publicKeyFile = writePublicKeyToFile(keyPair);
         File privateKeyFile = writePrivateKeyToFile(keyPair);
@@ -76,7 +72,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testEncryptionDecryptionEqualsInputAndOutput() throws IOException, NoSuchAlgorithmException, InvalidCipherTextException, DecoderException {
+    public void testEncryptionDecryptionEqualsInputAndOutput() throws Exception {
         String readableText = "This is a text that will be encrpyted and decrypted.";
 
         KeyPair keyPair = keyTool.createKeyPair();
@@ -87,7 +83,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testSequentialCreatedKeysAreNotEquals() throws IOException, NoSuchAlgorithmException {
+    public void testSequentialCreatedKeysAreNotEquals() throws Exception {
         KeyPair keyPair1 = keyTool.createKeyPair();
         KeyPair keyPair2 = keyTool.createKeyPair();
 
@@ -96,7 +92,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testHexEncodingDecoding() throws EncoderException, DecoderException {
+    public void testHexEncodingDecoding() throws Exception {
         String testString = "this is a string";
 
         String dataInHex = Hex.encodeHexString(testString.getBytes());

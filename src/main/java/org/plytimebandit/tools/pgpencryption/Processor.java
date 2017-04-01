@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 import javax.inject.Inject;
 
@@ -39,7 +40,7 @@ class Processor {
         this.pgpEncryptor = pgpEncryptor;
     }
 
-    void createKeys(String outputPath) throws NoSuchAlgorithmException, IOException {
+    void createKeys(String outputPath) throws NoSuchAlgorithmException, IOException, NoSuchProviderException {
         if (doOutputFilesExist(outputPath)) {
             LOGGER.error(String.format(
                     "At least one of these files exist in output folder %s: %s, %s. Keys cannot be created.",
