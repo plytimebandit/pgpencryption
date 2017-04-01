@@ -1,6 +1,8 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -11,6 +13,8 @@ import java.security.SecureRandom;
 import javax.inject.Inject;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
+import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
@@ -29,24 +33,34 @@ public class KeyTool {
         return generator.generateKeyPair();
     }
 
-    public String encodePublicKeyBase64(KeyPair keyPair) {
-        return encodeKeyBase64(keyPair.getPublic());
+    public String convertPublicKeyToString(KeyPair keyPair) {
+        return convertToString(keyPair.getPublic());
     }
 
-    public String encodePrivateKeyBase64(KeyPair keyPair) {
-        return encodeKeyBase64(keyPair.getPrivate());
+    public String convertPrivateKeyToString(KeyPair keyPair) {
+        return convertToString(keyPair.getPrivate());
     }
 
-    String encodeKeyBase64(Key key) {
+    String convertToString(Key key) {
         return Base64.encodeBase64String(key.getEncoded());
     }
 
-    public AsymmetricKeyParameter decodePublicKeyBase64(String publicKey) throws IOException {
-        return PublicKeyFactory.createKey(Base64.decodeBase64(publicKey));
+    public CipherParameters convertToPublicKey(File publicKeyFile) throws IOException {
+        String publicKeyAsString = FileUtils.readFileToString(publicKeyFile, StandardCharsets.UTF_8);
+        return PublicKeyFactory.createKey(Base64.decodeBase64(publicKeyAsString));
     }
 
-    public AsymmetricKeyParameter decodePrivateKeyBase64(String privateKey) throws IOException {
-        return PrivateKeyFactory.createKey(Base64.decodeBase64(privateKey));
+    public CipherParameters convertToPublicKey(Key publicKey) throws IOException {
+        return PublicKeyFactory.createKey(publicKey.getEncoded());
+    }
+
+    public AsymmetricKeyParameter convertToPrivateKey(File privateKeyFile) throws IOException {
+        String privateKeyAsString = FileUtils.readFileToString(privateKeyFile, StandardCharsets.UTF_8);
+        return PrivateKeyFactory.createKey(Base64.decodeBase64(privateKeyAsString));
+    }
+
+    public AsymmetricKeyParameter convertToPrivateKey(Key privateKey) throws IOException {
+        return PrivateKeyFactory.createKey(privateKey.getEncoded());
     }
 
     @Inject

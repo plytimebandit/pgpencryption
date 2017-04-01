@@ -91,8 +91,8 @@ public class PgpEncryptionTest {
         KeyPair keyPair1 = keyTool.createKeyPair();
         KeyPair keyPair2 = keyTool.createKeyPair();
 
-        Assertions.assertThat(keyTool.encodePrivateKeyBase64(keyPair1)).isNotEqualTo(keyTool.encodePrivateKeyBase64(keyPair2));
-        Assertions.assertThat(keyTool.encodePublicKeyBase64(keyPair1)).isNotEqualTo(keyTool.encodePublicKeyBase64(keyPair2));
+        Assertions.assertThat(keyTool.convertPrivateKeyToString(keyPair1)).isNotEqualTo(keyTool.convertPrivateKeyToString(keyPair2));
+        Assertions.assertThat(keyTool.convertPublicKeyToString(keyPair1)).isNotEqualTo(keyTool.convertPublicKeyToString(keyPair2));
     }
 
     @Test
@@ -142,7 +142,7 @@ public class PgpEncryptionTest {
     }
 
     private File writePrivateKeyToFile(KeyPair keyPair) throws IOException {
-        String privateKey = keyTool.encodePrivateKeyBase64(keyPair);
+        String privateKey = keyTool.convertPrivateKeyToString(keyPair);
 
         File tempFile = File.createTempFile("temp_pgp_private_test_", ".txt");
         tempFile.deleteOnExit();
@@ -156,7 +156,7 @@ public class PgpEncryptionTest {
     }
 
     private File writePublicKeyToFile(KeyPair keyPair) throws IOException {
-        String publicKey = keyTool.encodePublicKeyBase64(keyPair);
+        String publicKey = keyTool.convertPublicKeyToString(keyPair);
 
         File tempFile = File.createTempFile("temp_pgp_public_test_", ".txt");
         tempFile.deleteOnExit();

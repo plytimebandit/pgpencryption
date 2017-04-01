@@ -9,10 +9,10 @@ import javax.inject.Inject;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 
 public class PgpEncryptor {
 
@@ -36,19 +36,16 @@ public class PgpEncryptor {
     }
 
     public String withKey(File keyFile) throws IOException, InvalidCipherTextException {
-        String key = FileUtils.readFileToString(keyFile, StandardCharsets.UTF_8);
-        return exec(key);
+        return exec(keyTool.convertToPublicKey(keyFile));
     }
 
     public String withKey(Key publicKey) throws IOException, InvalidCipherTextException {
-        return exec(keyTool.encodeKeyBase64(publicKey));
+        return exec(keyTool.convertToPublicKey(publicKey));
     }
 
-    private String exec(String publicKeyString) throws IOException, InvalidCipherTextException {
-        AsymmetricKeyParameter publicKey = keyTool.decodePublicKeyBase64(publicKeyString);
-
+    private String exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
         PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
-        encoding.init(true, publicKey);
+        encoding.init(true, cipherParameters);
 
         int bufferSize = encoding.getInputBlockSize();
 
