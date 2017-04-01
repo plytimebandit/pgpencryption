@@ -8,6 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAKey;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
@@ -37,6 +40,23 @@ public class PgpEncryptionTest {
         pgpDecryptor = injector.getInstance(PgpDecryptor.class);
         pgpEncryptor = injector.getInstance(PgpEncryptor.class);
         keyTool = injector.getInstance(KeyTool.class);
+    }
+
+    @Test
+    public void testKeyAlgorithmAndLength() throws Exception {
+        KeyPair keyPair = keyTool.createKeyPair();
+
+        PublicKey publicKey = keyPair.getPublic();
+        PrivateKey privateKey = keyPair.getPrivate();
+
+        Assert.assertTrue(publicKey instanceof RSAKey);
+        Assert.assertTrue(privateKey instanceof RSAKey);
+
+        Assert.assertEquals("RSA", publicKey.getAlgorithm());
+        Assert.assertEquals("RSA", privateKey.getAlgorithm());
+
+        Assert.assertEquals(4096, ((RSAKey) publicKey).getModulus().bitLength());
+        Assert.assertEquals(4096, ((RSAKey) privateKey).getModulus().bitLength());
     }
 
     @Test
