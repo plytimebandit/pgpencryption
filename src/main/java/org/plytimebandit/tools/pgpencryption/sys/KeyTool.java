@@ -14,10 +14,7 @@ import com.google.inject.name.Named;
 
 public class KeyTool {
 
-    @Inject @Named("keySize")
     private int keySize;
-
-    @Inject @Named("algorithm")
     private String algorithm;
 
     @Inject
@@ -41,5 +38,15 @@ public class KeyTool {
 
     String getPublicKey(PublicKey publicKey) {
         return Base64.encodeBase64String(publicKey.getEncoded());
+    }
+
+    @Inject
+    void setKeySize(@Named("keySize") int keySize) {
+        this.keySize = keySize;
+    }
+
+    @Inject
+    void setAlgorithm(@Named("algorithm") String algorithm) {
+        this.algorithm = algorithm;
     }
 }
