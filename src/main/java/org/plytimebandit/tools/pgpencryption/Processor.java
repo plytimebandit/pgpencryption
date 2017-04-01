@@ -52,12 +52,12 @@ class Processor {
 
         Path path = Paths.get(outputPath, PGP_PUB);
         LOGGER.info(String.format("Writing public key to file '%s'...", path));
-        writeToFile(keyTool.getPublicKey(keyPair), path);
+        writeToFile(keyTool.encodePublicKeyBase64(keyPair), path);
         LOGGER.info("Done.");
 
         path = Paths.get(outputPath, PGP_KEY);
         LOGGER.info(String.format("Writing private key to file '%s'...", path));
-        writeToFile(keyTool.getPrivateKey(keyPair), path);
+        writeToFile(keyTool.encodePrivateKeyBase64(keyPair), path);
         LOGGER.info("Done.");
     }
 

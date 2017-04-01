@@ -2,13 +2,17 @@ package org.plytimebandit.tools.pgpencryption;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.security.Key;
 import java.security.KeyPair;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.security.interfaces.RSAKey;
 
 import org.apache.commons.codec.binary.Hex;
@@ -87,8 +91,8 @@ public class PgpEncryptionTest {
         KeyPair keyPair1 = keyTool.createKeyPair();
         KeyPair keyPair2 = keyTool.createKeyPair();
 
-        Assertions.assertThat(keyTool.getPrivateKey(keyPair1)).isNotEqualTo(keyTool.getPrivateKey(keyPair2));
-        Assertions.assertThat(keyTool.getPublicKey(keyPair1)).isNotEqualTo(keyTool.getPublicKey(keyPair2));
+        Assertions.assertThat(keyTool.encodePrivateKeyBase64(keyPair1)).isNotEqualTo(keyTool.encodePrivateKeyBase64(keyPair2));
+        Assertions.assertThat(keyTool.encodePublicKeyBase64(keyPair1)).isNotEqualTo(keyTool.encodePublicKeyBase64(keyPair2));
     }
 
     @Test
@@ -119,8 +123,26 @@ public class PgpEncryptionTest {
         Assert.assertNotEquals(encryptedData, decryptedData);
     }
 
+    @Test
+    public void testKeyStore() throws Exception {
+        File keyStoreFile = new File(getClass().getResource("testkeystore.jks").toURI());
+
+        KeyStore keyStore = KeyStore.getInstance("JKS", "SUN");
+        keyStore.load(new FileInputStream(keyStoreFile), "test123".toCharArray());
+        Key privateKey = keyStore.getKey("test", "test123".toCharArray());
+
+        Certificate certificate = keyStore.getCertificate("test");
+        PublicKey publicKey = certificate.getPublicKey();
+
+        String expected = "testxxxyyy";
+        String encrypted = pgpEncryptor.encrypt(expected).withKey(publicKey);
+        String decryptedKey = pgpDecryptor.decrypt(encrypted).withKey(privateKey);
+
+        Assert.assertEquals(expected, decryptedKey);
+    }
+
     private File writePrivateKeyToFile(KeyPair keyPair) throws IOException {
-        String privateKey = keyTool.getPrivateKey(keyPair);
+        String privateKey = keyTool.encodePrivateKeyBase64(keyPair);
 
         File tempFile = File.createTempFile("temp_pgp_private_test_", ".txt");
         tempFile.deleteOnExit();
@@ -134,7 +156,7 @@ public class PgpEncryptionTest {
     }
 
     private File writePublicKeyToFile(KeyPair keyPair) throws IOException {
-        String publicKey = keyTool.getPublicKey(keyPair);
+        String publicKey = keyTool.encodePublicKeyBase64(keyPair);
 
         File tempFile = File.createTempFile("temp_pgp_public_test_", ".txt");
         tempFile.deleteOnExit();

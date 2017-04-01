@@ -3,24 +3,22 @@ package org.plytimebandit.tools.pgpencryption.sys;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.PublicKey;
+import java.security.Key;
 
 import javax.inject.Inject;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 public class PgpEncryptor {
 
     private final KeyTool keyTool;
 
-    private String readableText;
+    private byte[] readableText;
 
     @Inject
     public PgpEncryptor(KeyTool keyTool) {
@@ -28,12 +26,12 @@ public class PgpEncryptor {
     }
 
     public PgpEncryptor encrypt(String readableText) {
-        this.readableText = readableText;
+        this.readableText = readableText.getBytes(StandardCharsets.UTF_8);
         return this;
     }
 
     public PgpEncryptor encrypt(File readableText) throws IOException {
-        this.readableText = FileUtils.readFileToString(readableText, StandardCharsets.UTF_8);
+        this.readableText = FileUtils.readFileToByteArray(readableText);
         return this;
     }
 
@@ -42,27 +40,21 @@ public class PgpEncryptor {
         return exec(key);
     }
 
-    public String withKey(PublicKey publicKey) throws IOException, InvalidCipherTextException {
-        return exec(keyTool.getPublicKey(publicKey));
+    public String withKey(Key publicKey) throws IOException, InvalidCipherTextException {
+        return exec(keyTool.encodeKeyBase64(publicKey));
     }
 
     private String exec(String publicKeyString) throws IOException, InvalidCipherTextException {
-        AsymmetricKeyParameter publicKey = PublicKeyFactory.createKey(Base64.decodeBase64(publicKeyString));
+        AsymmetricKeyParameter publicKey = keyTool.decodePublicKeyBase64(publicKeyString);
 
         PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
         encoding.init(true, publicKey);
 
-        byte[] readableTextBytes = readableText.getBytes(StandardCharsets.UTF_8);
-
-        return execBytesInSingleSteps(encoding, readableTextBytes);
-    }
-
-    private String execBytesInSingleSteps(PKCS1Encoding encoding, byte[] readableTextBytes) throws InvalidCipherTextException {
         int bufferSize = encoding.getInputBlockSize();
 
         StringBuilder result = new StringBuilder();
 
-        byte[][] chunks = Tools.chunkArray(readableTextBytes, bufferSize);
+        byte[][] chunks = Tools.chunkArray(readableText, bufferSize);
         for (byte[] oneChunk : chunks) {
             byte[] encryptedData = encoding.processBlock(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
             result.append(Hex.encodeHexString(encryptedData));

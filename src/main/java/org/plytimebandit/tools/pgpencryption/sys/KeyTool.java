@@ -1,16 +1,19 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
+import java.io.IOException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 
 import javax.inject.Inject;
 
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 import com.google.inject.name.Named;
 
@@ -26,20 +29,24 @@ public class KeyTool {
         return generator.generateKeyPair();
     }
 
-    public String getPublicKey(KeyPair keyPair) {
-        return getPublicKey(keyPair.getPublic());
+    public String encodePublicKeyBase64(KeyPair keyPair) {
+        return encodeKeyBase64(keyPair.getPublic());
     }
 
-    public String getPrivateKey(KeyPair keyPair) {
-        return getPrivateKey(keyPair.getPrivate());
+    public String encodePrivateKeyBase64(KeyPair keyPair) {
+        return encodeKeyBase64(keyPair.getPrivate());
     }
 
-    String getPrivateKey(PrivateKey privateKey) {
-        return Base64.encodeBase64String(privateKey.getEncoded());
+    String encodeKeyBase64(Key key) {
+        return Base64.encodeBase64String(key.getEncoded());
     }
 
-    String getPublicKey(PublicKey publicKey) {
-        return Base64.encodeBase64String(publicKey.getEncoded());
+    public AsymmetricKeyParameter decodePublicKeyBase64(String publicKey) throws IOException {
+        return PublicKeyFactory.createKey(Base64.decodeBase64(publicKey));
+    }
+
+    public AsymmetricKeyParameter decodePrivateKeyBase64(String privateKey) throws IOException {
+        return PrivateKeyFactory.createKey(Base64.decodeBase64(privateKey));
     }
 
     @Inject
