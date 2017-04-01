@@ -61,7 +61,8 @@ class Processor {
     }
 
     void encryptFile(String key, String file) throws IOException, InvalidCipherTextException {
-        if (!new File(key).exists()) {
+        File keyFile = new File(key);
+        if (!keyFile.exists()) {
             LOGGER.error(String.format("Key %s does not exist.", key));
             return;
         }
@@ -75,7 +76,7 @@ class Processor {
         }
 
         LOGGER.info(String.format("Encrypting file %s...", file));
-        String encryptedData = pgpEncryptor.encrypt(new File(file)).withKey(key);
+        String encryptedData = pgpEncryptor.encrypt(new File(file)).withKey(keyFile);
 
         LOGGER.info(String.format("Writing output file %s...", file + ".enc"));
         writeToFile(encryptedData, Paths.get(file + ".enc"));
@@ -84,7 +85,8 @@ class Processor {
     }
 
     void decryptFile(String key, String file) throws IOException, DecoderException, InvalidCipherTextException {
-        if (!new File(key).exists()) {
+        File keyFile = new File(key);
+        if (!keyFile.exists()) {
             LOGGER.error(String.format("Key %s does not exist.", key));
             return;
         }
@@ -98,7 +100,7 @@ class Processor {
         }
 
         LOGGER.info(String.format("Decrypting file %s...", file));
-        String decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(key);
+        String decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(keyFile);
 
         LOGGER.info(String.format("Writing output file %s...", file + ".dec"));
         writeToFile(decryptedData, Paths.get(file + ".dec"));

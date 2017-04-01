@@ -6,13 +6,24 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import javax.inject.Inject;
+
 import org.apache.commons.codec.binary.Base64;
+
+import com.google.inject.name.Named;
 
 public class KeyTool {
 
+    @Inject @Named("keySize")
+    private int keySize;
+
+    @Inject @Named("algorithm")
+    private String algorithm;
+
+    @Inject
     public KeyPair createKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(4096);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm);
+        generator.initialize(keySize);
         return generator.generateKeyPair();
     }
 

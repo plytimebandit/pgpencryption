@@ -37,10 +37,6 @@ public class PgpEncryptor {
         return this;
     }
 
-    public String withKey(String keyFile) throws IOException, InvalidCipherTextException {
-        return withKey(new File(keyFile));
-    }
-
     public String withKey(File keyFile) throws IOException, InvalidCipherTextException {
         String key = FileUtils.readFileToString(keyFile, StandardCharsets.UTF_8);
         return exec(key);

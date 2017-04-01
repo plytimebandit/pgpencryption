@@ -87,7 +87,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testSequeltielCreatedKeysAreNotEquals() throws IOException, NoSuchAlgorithmException {
+    public void testSequentialCreatedKeysAreNotEquals() throws IOException, NoSuchAlgorithmException {
         KeyPair keyPair1 = keyTool.createKeyPair();
         KeyPair keyPair2 = keyTool.createKeyPair();
 

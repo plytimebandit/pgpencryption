@@ -38,10 +38,6 @@ public class PgpDecryptor {
         return this;
     }
 
-    public String withKey(String keyFile) throws InvalidCipherTextException, IOException, DecoderException {
-        return withKey(new File(keyFile));
-    }
-
     public String withKey(File keyFile) throws IOException, DecoderException, InvalidCipherTextException {
         String key = FileUtils.readFileToString(keyFile, StandardCharsets.UTF_8);
         return exec(key);
