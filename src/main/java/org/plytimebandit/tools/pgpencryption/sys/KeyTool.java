@@ -41,7 +41,7 @@ public class KeyTool {
         return convertToString(keyPair.getPrivate());
     }
 
-    String convertToString(Key key) {
+    private String convertToString(Key key) {
         return Base64.encodeBase64String(key.getEncoded());
     }
 
