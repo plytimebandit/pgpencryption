@@ -32,7 +32,7 @@ public class PgpDecryptor {
     }
 
     public PgpDecryptor decrypt(File encryptedText) throws IOException {
-        this.encryptedText = FileUtils.readFileToByteArray(encryptedText);
+        this.encryptedText = Hex.decode(FileUtils.readFileToByteArray(encryptedText));
         return this;
     }
 

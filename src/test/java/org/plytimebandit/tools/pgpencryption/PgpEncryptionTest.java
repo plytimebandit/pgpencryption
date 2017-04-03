@@ -4,15 +4,21 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.interfaces.RSAKey;
 import java.util.Arrays;
 import java.util.Collections;
@@ -112,7 +118,7 @@ public class PgpEncryptionTest {
     }
 
     @Test
-    public void testRealFileWithBigBlockSizeEncryptionDecryption() throws Exception {
+    public void testEncryptionAndDecryptionOfFileContentWithBigBlockSize() throws Exception {
         File file = new File(getClass().getResource("test.txt").toURI());
 
         KeyPair keyPair = keyTool.createKeyPair();
@@ -128,15 +134,30 @@ public class PgpEncryptionTest {
     }
 
     @Test
+    public void testEncryptionAndDecryptionUsingFilesWithKeyStore() throws Exception {
+        File tempFile = File.createTempFile("temp_pgp_test_", ".txt");
+        tempFile.deleteOnExit();
+        File tempFileEnc = File.createTempFile("temp_pgp_enc_test_", ".txt");
+        tempFileEnc.deleteOnExit();
+
+        KeyStore keyStore = loadAndGetTestKeyStore();
+        PublicKey publicKey = getPublicKey(keyStore);
+        Key privateKey = getPrivateKey(keyStore);
+
+        FileUtils.writeStringToFile(tempFile, TEXT, StandardCharsets.UTF_8);
+        String encryptedData = pgpEncryptor.encrypt(tempFile).withKey(publicKey);
+
+        FileUtils.writeStringToFile(tempFileEnc, encryptedData, StandardCharsets.UTF_8);
+        String decryptedData = pgpDecryptor.decrypt(tempFileEnc).withKey(privateKey);
+
+        Assert.assertEquals(TEXT, decryptedData);
+    }
+
+    @Test
     public void testKeyStore() throws Exception {
-        File keyStoreFile = new File(getClass().getResource("testkeystore.jks").toURI());
-
-        KeyStore keyStore = KeyStore.getInstance("JKS", "SUN");
-        keyStore.load(new FileInputStream(keyStoreFile), "test123".toCharArray());
-        Key privateKey = keyStore.getKey("test", "test123".toCharArray());
-
-        Certificate certificate = keyStore.getCertificate("test");
-        PublicKey publicKey = certificate.getPublicKey();
+        KeyStore keyStore = loadAndGetTestKeyStore();
+        Key privateKey = getPrivateKey(keyStore);
+        PublicKey publicKey = getPublicKey(keyStore);
 
         String encrypted = pgpEncryptor.encrypt(TEXT).withKey(publicKey);
         String decryptedKey = pgpDecryptor.decrypt(encrypted).withKey(privateKey);
@@ -240,5 +261,22 @@ public class PgpEncryptionTest {
         }
 
         return tempFile;
+    }
+
+    private PublicKey getPublicKey(KeyStore keyStore) throws KeyStoreException {
+        Certificate certificate = keyStore.getCertificate("test");
+        return certificate.getPublicKey();
+    }
+
+    private Key getPrivateKey(KeyStore keyStore) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        return keyStore.getKey("test", "test123".toCharArray());
+    }
+
+    private KeyStore loadAndGetTestKeyStore() throws URISyntaxException, KeyStoreException, NoSuchProviderException, IOException, NoSuchAlgorithmException, CertificateException {
+        File keyStoreFile = new File(getClass().getResource("testkeystore.jks").toURI());
+
+        KeyStore keyStore = KeyStore.getInstance("JKS", "SUN");
+        keyStore.load(new FileInputStream(keyStoreFile), "test123".toCharArray());
+        return keyStore;
     }
 }
