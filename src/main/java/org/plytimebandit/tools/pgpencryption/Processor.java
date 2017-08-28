@@ -48,7 +48,13 @@ class Processor {
             return;
         }
 
+        if (!createOutputPathIfNotExist(outputPath)) {
+            return;
+        }
+
+        LOGGER.info("Creating key pair...");
         KeyPair keyPair = keyTool.createKeyPair();
+        LOGGER.info("Done.");
 
         Path path = Paths.get(outputPath, PGP_PUB);
         LOGGER.info(String.format("Writing public key to file '%s'...", path));
@@ -59,6 +65,18 @@ class Processor {
         LOGGER.info(String.format("Writing private key to file '%s'...", path));
         writeToFile(keyTool.convertPrivateKeyToString(keyPair), path);
         LOGGER.info("Done.");
+    }
+
+    private boolean createOutputPathIfNotExist(String outputPath) {
+        File outputDir = new File(outputPath);
+        if (!outputDir.exists()) {
+            boolean success = outputDir.mkdir();
+            if (!success) {
+                LOGGER.error(String.format("Cannot create output directory '%s'", outputDir));
+            }
+            return success;
+        }
+        return true;
     }
 
     void encryptFile(String key, String file) throws IOException, InvalidCipherTextException {
