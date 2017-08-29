@@ -95,7 +95,7 @@ class Processor {
         }
 
         LOGGER.info(String.format("Encrypting file %s...", file));
-        String encryptedData = pgpEncryptor.encrypt(new File(file)).withKey(keyFile);
+        byte[] encryptedData = pgpEncryptor.encrypt(new File(file)).withKey(keyFile);
 
         LOGGER.info(String.format("Writing output file %s...", file + ".enc"));
         writeToFile(encryptedData, Paths.get(file + ".enc"));
@@ -119,7 +119,7 @@ class Processor {
         }
 
         LOGGER.info(String.format("Decrypting file %s...", file));
-        String decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(keyFile);
+        byte[] decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(keyFile);
 
         LOGGER.info(String.format("Writing output file %s...", file + ".dec"));
         writeToFile(decryptedData, Paths.get(file + ".dec"));
@@ -129,6 +129,10 @@ class Processor {
 
     private boolean doOutputFilesExist(String outputPath) {
         return new File(outputPath, PGP_PUB).exists() || new File(outputPath, PGP_KEY).exists();
+    }
+
+    private static void writeToFile(byte[] source, Path target) throws IOException {
+        writeToFile(new String(source, StandardCharsets.UTF_8), target);
     }
 
     private static void writeToFile(String source, Path target) throws IOException {

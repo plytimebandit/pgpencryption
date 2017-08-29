@@ -77,12 +77,12 @@ public class PgpEncryptionTest {
         File publicKeyFile = writePublicKeyToFile(keyPair);
         File privateKeyFile = writePrivateKeyToFile(keyPair);
 
-        String encryptedString = pgpEncryptor.encrypt(TEXT).withKey(publicKeyFile);
-        String decryptedString = pgpDecryptor.decrypt(encryptedString).withKey(privateKeyFile);
+        byte[] encryptedString = pgpEncryptor.encrypt(TEXT.getBytes(StandardCharsets.UTF_8)).withKey(publicKeyFile);
+        byte[] decryptedString = pgpDecryptor.decrypt(encryptedString).withKey(privateKeyFile);
 
-        Assertions.assertThat(TEXT).isNotEqualTo(encryptedString);
+        Assertions.assertThat(TEXT).isNotEqualTo(new String(encryptedString, StandardCharsets.UTF_8));
         Assertions.assertThat(encryptedString).isNotEqualTo(decryptedString);
-        Assertions.assertThat(TEXT).isEqualTo(decryptedString);
+        Assertions.assertThat(TEXT).isEqualTo(new String(decryptedString, StandardCharsets.UTF_8));
     }
 
     @Test
@@ -90,10 +90,10 @@ public class PgpEncryptionTest {
         String readableText = "This is a text that will be encrpyted and decrypted.";
 
         KeyPair keyPair = keyTool.createKeyPair();
-        String encryptedText = pgpEncryptor.encrypt(readableText).withKey(keyPair.getPublic());
-        String decryptedText = pgpDecryptor.decrypt(encryptedText).withKey(keyPair.getPrivate());
+        byte[] encryptedText = pgpEncryptor.encrypt(readableText.getBytes(StandardCharsets.UTF_8)).withKey(keyPair.getPublic());
+        byte[] decryptedText = pgpDecryptor.decrypt(encryptedText).withKey(keyPair.getPrivate());
 
-        Assertions.assertThat(decryptedText).isEqualTo(readableText);
+        Assertions.assertThat(new String(decryptedText, StandardCharsets.UTF_8)).isEqualTo(readableText);
     }
 
     @Test
@@ -154,12 +154,12 @@ public class PgpEncryptionTest {
 
         KeyPair keyPair = keyTool.createKeyPair();
 
-        String encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
-        String decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
+        byte[] encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
+        byte[] decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
 
-        String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        byte[] fileContent = FileUtils.readFileToByteArray(file);
 
-        Assert.assertEquals(decryptedData, fileContent);
+        Assert.assertArrayEquals(decryptedData, fileContent);
         Assert.assertNotEquals(encryptedData, fileContent);
         Assert.assertNotEquals(encryptedData, decryptedData);
     }
@@ -170,18 +170,18 @@ public class PgpEncryptionTest {
 
         KeyPair keyPair = keyTool.createKeyPair();
 
-        String encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
-        String decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
-
-        File outputFileDecrypted = File.createTempFile("temp_pgp_test_dec_", ".pdf");
-        outputFileDecrypted.deleteOnExit();
-        FileUtils.writeStringToFile(outputFileDecrypted, decryptedData, StandardCharsets.UTF_8);
+        byte[] encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
+        byte[] decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
 
         File outputFileEncrypted = File.createTempFile("temp_pgp_test_enc_", ".pdf");
         outputFileEncrypted.deleteOnExit();
-        FileUtils.writeStringToFile(outputFileEncrypted, encryptedData, StandardCharsets.UTF_8);
+        FileUtils.writeByteArrayToFile(outputFileEncrypted, encryptedData);
 
-        Assert.assertTrue(FileUtils.contentEqualsIgnoreEOL(file, outputFileDecrypted, StandardCharsets.UTF_8.name())); // TODO FileUtils.contentEquals() returns false!
+        File outputFileDecrypted = File.createTempFile("temp_pgp_test_dec_", ".pdf");
+        outputFileDecrypted.deleteOnExit();
+        FileUtils.writeByteArrayToFile(outputFileDecrypted, decryptedData);
+
+        Assert.assertTrue(FileUtils.contentEquals(file, outputFileDecrypted));
     }
 
     @Test
@@ -196,12 +196,12 @@ public class PgpEncryptionTest {
         Key privateKey = getPrivateKey(keyStore);
 
         FileUtils.writeStringToFile(tempFile, TEXT, StandardCharsets.UTF_8);
-        String encryptedData = pgpEncryptor.encrypt(tempFile).withKey(publicKey);
+        byte[] encryptedData = pgpEncryptor.encrypt(tempFile).withKey(publicKey);
 
-        FileUtils.writeStringToFile(tempFileEnc, encryptedData, StandardCharsets.UTF_8);
-        String decryptedData = pgpDecryptor.decrypt(tempFileEnc).withKey(privateKey);
+        FileUtils.writeByteArrayToFile(tempFileEnc, encryptedData);
+        byte[] decryptedData = pgpDecryptor.decrypt(tempFileEnc).withKey(privateKey);
 
-        Assert.assertEquals(TEXT, decryptedData);
+        Assert.assertEquals(TEXT, new String(decryptedData, StandardCharsets.UTF_8));
     }
 
     @Test
@@ -210,10 +210,10 @@ public class PgpEncryptionTest {
         Key privateKey = getPrivateKey(keyStore);
         PublicKey publicKey = getPublicKey(keyStore);
 
-        String encrypted = pgpEncryptor.encrypt(TEXT).withKey(publicKey);
-        String decryptedKey = pgpDecryptor.decrypt(encrypted).withKey(privateKey);
+        byte[] encrypted = pgpEncryptor.encrypt(TEXT.getBytes(StandardCharsets.UTF_8)).withKey(publicKey);
+        byte[] decryptedKey = pgpDecryptor.decrypt(encrypted).withKey(privateKey);
 
-        Assert.assertEquals(TEXT, decryptedKey);
+        Assert.assertEquals(TEXT, new String(decryptedKey, StandardCharsets.UTF_8));
     }
 
     @Test

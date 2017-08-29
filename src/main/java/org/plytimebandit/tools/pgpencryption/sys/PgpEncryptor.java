@@ -3,7 +3,6 @@ package org.plytimebandit.tools.pgpencryption.sys;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 
 import javax.inject.Inject;
@@ -26,8 +25,8 @@ public class PgpEncryptor {
         this.keyTool = keyTool;
     }
 
-    public PgpEncryptor encrypt(String readableText) {
-        this.readableText = readableText.getBytes(StandardCharsets.UTF_8);
+    public PgpEncryptor encrypt(byte[] readableText) {
+        this.readableText = readableText;
         return this;
     }
 
@@ -36,15 +35,15 @@ public class PgpEncryptor {
         return this;
     }
 
-    public String withKey(File keyFile) throws IOException, InvalidCipherTextException {
+    public byte[] withKey(File keyFile) throws IOException, InvalidCipherTextException {
         return exec(keyTool.convertToPublicKey(keyFile));
     }
 
-    public String withKey(Key publicKey) throws IOException, InvalidCipherTextException {
+    public byte[] withKey(Key publicKey) throws IOException, InvalidCipherTextException {
         return exec(keyTool.convertToPublicKey(publicKey));
     }
 
-    private String exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
+    private byte[] exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
         PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
         encoding.init(true, cipherParameters);
 
@@ -59,7 +58,7 @@ public class PgpEncryptor {
         }
 
         outputStream.flush();
-        return outputStream.toString(StandardCharsets.UTF_8.name());
+        return outputStream.toByteArray();
     }
 
 }
