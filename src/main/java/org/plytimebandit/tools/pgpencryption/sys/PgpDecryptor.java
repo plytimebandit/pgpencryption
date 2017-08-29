@@ -1,5 +1,6 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -50,15 +51,16 @@ public class PgpDecryptor {
 
         int bufferSize = encoding.getInputBlockSize();
 
-        StringBuilder result = new StringBuilder();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         byte[][] chunks = Tools.chunkArray(encryptedText, bufferSize);
         for (byte[] oneChunk : chunks) {
             byte[] decryptedData = encoding.processBlock(oneChunk, 0, oneChunk.length);
-            result.append(new String(decryptedData, StandardCharsets.UTF_8));
+            byteArrayOutputStream.write(decryptedData);
         }
 
-        return result.toString();
+        byteArrayOutputStream.flush();
+        return byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
     }
 
 }

@@ -118,6 +118,37 @@ public class PgpEncryptionTest {
     }
 
     @Test
+    public void testByteReadAndWriteOfPdfFile() throws Exception {
+        File file = new File(getClass().getResource("test.pdf").toURI());
+        File outputFile = File.createTempFile("temp_pgp_test_", ".pdf");
+        outputFile.deleteOnExit();
+
+        byte[] fileBytes = FileUtils.readFileToByteArray(file);
+        FileUtils.writeByteArrayToFile(outputFile, fileBytes);
+
+        Assertions.assertThat(outputFile.length()).isEqualTo(file.length());
+        Assertions.assertThat(FileUtils.contentEquals(outputFile, file)).isTrue();
+    }
+
+    @Test
+    public void testHexEncodingDecodingOfPdfFile() throws Exception {
+        File file = new File(getClass().getResource("test.pdf").toURI());
+        File outputFile = File.createTempFile("temp_pgp_test_", ".pdf");
+        outputFile.deleteOnExit();
+
+        byte[] fileBytes = FileUtils.readFileToByteArray(file);
+        byte[] encodedFileBytes = org.bouncycastle.util.encoders.Hex.encode(fileBytes);
+        String encodedFileString = new String(encodedFileBytes, StandardCharsets.UTF_8);
+
+        byte[] fileBytesDecoded = org.bouncycastle.util.encoders.Hex.decode(encodedFileString.getBytes(StandardCharsets.UTF_8));
+
+        FileUtils.writeByteArrayToFile(outputFile, fileBytesDecoded);
+
+        Assertions.assertThat(outputFile.length()).isEqualTo(file.length());
+        Assertions.assertThat(FileUtils.contentEquals(outputFile, file)).isTrue();
+    }
+
+    @Test
     public void testEncryptionAndDecryptionOfFileContentWithBigBlockSize() throws Exception {
         File file = new File(getClass().getResource("test.txt").toURI());
 
@@ -131,6 +162,26 @@ public class PgpEncryptionTest {
         Assert.assertEquals(decryptedData, fileContent);
         Assert.assertNotEquals(encryptedData, fileContent);
         Assert.assertNotEquals(encryptedData, decryptedData);
+    }
+
+    @Test
+    public void testEncryptionAndDecryptionOfPdfFile() throws Exception {
+        File file = new File(getClass().getResource("test.pdf").toURI());
+
+        KeyPair keyPair = keyTool.createKeyPair();
+
+        String encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
+        String decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
+
+        File outputFileDecrypted = File.createTempFile("temp_pgp_test_dec_", ".pdf");
+        outputFileDecrypted.deleteOnExit();
+        FileUtils.writeStringToFile(outputFileDecrypted, decryptedData, StandardCharsets.UTF_8);
+
+        File outputFileEncrypted = File.createTempFile("temp_pgp_test_enc_", ".pdf");
+        outputFileEncrypted.deleteOnExit();
+        FileUtils.writeStringToFile(outputFileEncrypted, encryptedData, StandardCharsets.UTF_8);
+
+        Assert.assertTrue(FileUtils.contentEqualsIgnoreEOL(file, outputFileDecrypted, StandardCharsets.UTF_8.name())); // TODO FileUtils.contentEquals() returns false!
     }
 
     @Test

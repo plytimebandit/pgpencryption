@@ -1,5 +1,6 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -7,12 +8,12 @@ import java.security.Key;
 
 import javax.inject.Inject;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.util.encoders.Hex;
 
 public class PgpEncryptor {
 
@@ -49,15 +50,16 @@ public class PgpEncryptor {
 
         int bufferSize = encoding.getInputBlockSize();
 
-        StringBuilder result = new StringBuilder();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         byte[][] chunks = Tools.chunkArray(readableText, bufferSize);
         for (byte[] oneChunk : chunks) {
             byte[] encryptedData = encoding.processBlock(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
-            result.append(Hex.encodeHexString(encryptedData));
+            Hex.encode(encryptedData, outputStream);
         }
 
-        return result.toString();
+        outputStream.flush();
+        return outputStream.toString(StandardCharsets.UTF_8.name());
     }
 
 }
