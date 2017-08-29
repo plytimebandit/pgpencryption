@@ -12,9 +12,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-/*
- * TODO Cannot encrypt/decrypt PDF files. The output from decryption is invalid. The encryption could also be corrupt, though. Or maybe file writing...
- */
 public class PgpEncryption {
 
     private static final Logger PLAIN_LOGGER = LogManager.getLogger("plain_logger");

@@ -1,13 +1,10 @@
 package org.plytimebandit.tools.pgpencryption;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -15,6 +12,7 @@ import java.security.NoSuchProviderException;
 import javax.inject.Inject;
 
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -132,14 +130,10 @@ class Processor {
     }
 
     private static void writeToFile(byte[] source, Path target) throws IOException {
-        writeToFile(new String(source, StandardCharsets.UTF_8), target);
+        FileUtils.writeByteArrayToFile(target.toFile(), source);
     }
 
     private static void writeToFile(String source, Path target) throws IOException {
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                target, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-            writer.write(source);
-            writer.flush();
-        }
+        FileUtils.writeStringToFile(target.toFile(), source, StandardCharsets.UTF_8);
     }
 }
