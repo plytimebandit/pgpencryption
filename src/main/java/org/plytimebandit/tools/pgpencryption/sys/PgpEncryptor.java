@@ -8,6 +8,7 @@ import java.security.Key;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.crypto.BufferedAsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
@@ -45,7 +46,8 @@ public class PgpEncryptor {
 
     private byte[] exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
         PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
-        encoding.init(true, cipherParameters);
+        BufferedAsymmetricBlockCipher cipher = new BufferedAsymmetricBlockCipher(encoding);
+        cipher.init(true, cipherParameters);
 
         int bufferSize = encoding.getInputBlockSize();
 
@@ -53,8 +55,8 @@ public class PgpEncryptor {
 
         byte[][] chunks = Tools.chunkArray(readableText, bufferSize);
         for (byte[] oneChunk : chunks) {
-            byte[] encryptedData = encoding.processBlock(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
-            Hex.encode(encryptedData, outputStream);
+            cipher.processBytes(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
+            Hex.encode(cipher.doFinal(), outputStream);
         }
 
         outputStream.flush();

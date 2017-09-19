@@ -1,12 +1,15 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
+import java.math.BigDecimal;
+
 public class Tools {
 
     /**
      * https://gist.github.com/lesleh/7724554
      */
     public static byte[][] chunkArray(byte[] array, int chunkSize) {
-        int numOfChunks = (byte) Math.ceil((double) array.length / chunkSize);
+        BigDecimal bigDecimal = new BigDecimal(Math.ceil((double) array.length / chunkSize));
+        int numOfChunks = bigDecimal.toBigInteger().intValue();
         byte[][] output = new byte[numOfChunks][];
 
         for (int i = 0; i < numOfChunks; ++i) {

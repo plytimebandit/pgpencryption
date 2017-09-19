@@ -185,6 +185,26 @@ public class PgpEncryptionTest {
     }
 
     @Test
+    public void testEncryptionAndDecryptionOfPdfFile2() throws Exception {
+        File file = new File(getClass().getResource("test2.pdf").toURI());
+
+        KeyPair keyPair = keyTool.createKeyPair();
+
+        byte[] encryptedData = pgpEncryptor.encrypt(file).withKey(keyPair.getPublic());
+        byte[] decryptedData = pgpDecryptor.decrypt(encryptedData).withKey(keyPair.getPrivate());
+
+        File outputFileEncrypted = File.createTempFile("temp_pgp_test_enc_", ".pdf");
+        outputFileEncrypted.deleteOnExit();
+        FileUtils.writeByteArrayToFile(outputFileEncrypted, encryptedData);
+
+        File outputFileDecrypted = File.createTempFile("temp_pgp_test_dec_", ".pdf");
+        outputFileDecrypted.deleteOnExit();
+        FileUtils.writeByteArrayToFile(outputFileDecrypted, decryptedData);
+
+        Assert.assertTrue(FileUtils.contentEquals(file, outputFileDecrypted));
+    }
+
+    @Test
     public void testEncryptionAndDecryptionUsingFilesWithKeyStore() throws Exception {
         File tempFile = File.createTempFile("temp_pgp_test_", ".txt");
         tempFile.deleteOnExit();
