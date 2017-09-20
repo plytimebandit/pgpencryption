@@ -8,6 +8,8 @@ import java.security.Key;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.BufferedAsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -16,6 +18,8 @@ import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.util.encoders.Hex;
 
 public class PgpEncryptor {
+
+    private static final Logger LOGGER = LogManager.getLogger(PgpEncryptor.class);
 
     private final KeyTool keyTool;
 
@@ -54,7 +58,9 @@ public class PgpEncryptor {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         byte[][] chunks = Tools.chunkArray(readableText, bufferSize);
+        ProcessLogger processLogger = new ProcessLogger(LOGGER, chunks.length);
         for (byte[] oneChunk : chunks) {
+            processLogger.logNextStep("Encryption");
             cipher.processBytes(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
             Hex.encode(cipher.doFinal(), outputStream);
         }

@@ -9,6 +9,8 @@ import javax.inject.Inject;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.BufferedAsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -17,6 +19,8 @@ import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.util.encoders.Hex;
 
 public class PgpDecryptor {
+
+    private static final Logger LOGGER = LogManager.getLogger(PgpDecryptor.class);
 
     private final KeyTool keyTool;
 
@@ -55,7 +59,9 @@ public class PgpDecryptor {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         byte[][] chunks = Tools.chunkArray(encryptedText, bufferSize);
+        ProcessLogger processLogger = new ProcessLogger(LOGGER, chunks.length);
         for (byte[] oneChunk : chunks) {
+            processLogger.logNextStep("Decryption");
             cipher.processBytes(oneChunk, 0, oneChunk.length);
             outputStream.write(cipher.doFinal());
         }
