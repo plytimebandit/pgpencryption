@@ -4,11 +4,10 @@ import org.apache.logging.log4j.Logger;
 
 public class ProcessLogger {
 
-    private static final int NUMBER_OF_STEPS_TO_LOG = 10;
-
     private final Logger logger;
     private final int totalSteps;
 
+    private int numberOfStepsToLog = 10;
     private int stepCounter = 0;
     private int loggedStepsCounter = 0;
     private int logInterval;
@@ -17,13 +16,18 @@ public class ProcessLogger {
         this.logger = logger;
         this.totalSteps = totalSteps;
 
-        this.logInterval = totalSteps / NUMBER_OF_STEPS_TO_LOG + 1;
+        if (totalSteps <= numberOfStepsToLog) {
+            this.logInterval = 1;
+            numberOfStepsToLog = totalSteps;
+        } else {
+            this.logInterval = totalSteps / numberOfStepsToLog + 1;
+        }
     }
 
     public void logNextStep(String message) {
         stepCounter++;
         if (stepCounter % logInterval == 0 || stepCounter == totalSteps) {
-            logger.info(message + " {} %", ++loggedStepsCounter * (100 / NUMBER_OF_STEPS_TO_LOG));
+            logger.info(message + " {} %", ++loggedStepsCounter * (100 / numberOfStepsToLog));
         }
     }
 
