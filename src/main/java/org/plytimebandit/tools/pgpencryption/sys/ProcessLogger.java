@@ -15,7 +15,16 @@ public class ProcessLogger {
     public ProcessLogger(Logger logger, int totalSteps) {
         this.logger = logger;
         this.totalSteps = totalSteps;
+        init();
+    }
 
+    public ProcessLogger withNumberOfStepsToLog(int steps) {
+        numberOfStepsToLog = steps;
+        init();
+        return this;
+    }
+
+    private void init() {
         if (totalSteps <= numberOfStepsToLog) {
             this.logInterval = 1;
             numberOfStepsToLog = totalSteps;
@@ -25,10 +34,13 @@ public class ProcessLogger {
     }
 
     public void logNextStep(String message) {
+        if (numberOfStepsToLog == 0) {
+            return;
+        }
+
         stepCounter++;
         if (stepCounter % logInterval == 0 || stepCounter == totalSteps) {
             logger.info(message + " {} %", ++loggedStepsCounter * (100 / numberOfStepsToLog));
         }
     }
-
 }

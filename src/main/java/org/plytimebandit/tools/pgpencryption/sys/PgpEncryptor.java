@@ -64,6 +64,7 @@ public class PgpEncryptor {
             cipher.processBytes(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
             Hex.encode(cipher.doFinal(), outputStream);
         }
+        LOGGER.info("Encryption finished.");
 
         outputStream.flush();
         return outputStream.toByteArray();

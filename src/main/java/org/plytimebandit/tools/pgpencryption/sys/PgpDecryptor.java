@@ -65,6 +65,7 @@ public class PgpDecryptor {
             cipher.processBytes(oneChunk, 0, oneChunk.length);
             outputStream.write(cipher.doFinal());
         }
+        LOGGER.info("Decryption finished.");
 
         outputStream.flush();
         return outputStream.toByteArray();
