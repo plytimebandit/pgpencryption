@@ -1,4 +1,4 @@
-package org.plytimebandit.tools.pgpencryption.sys;
+package org.plytimebandit.tools.pgpencryption.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package org.plytimebandit.tools.pgpencryption.sys;
+package org.plytimebandit.tools.pgpencryption.util;
 
 import org.apache.logging.log4j.Logger;
 
@@ -33,7 +33,7 @@ public class ProcessLogger {
         }
     }
 
-    public void logNextStep(String message) {
+    public synchronized void logNextStep(String message) {
         if (numberOfStepsToLog == 0) {
             return;
         }

@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.security.Key;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -16,6 +18,8 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.util.encoders.Hex;
+import org.plytimebandit.tools.pgpencryption.util.ProcessLogger;
+import org.plytimebandit.tools.pgpencryption.util.Tools;
 
 public class PgpEncryptor {
 
@@ -49,25 +53,45 @@ public class PgpEncryptor {
     }
 
     private byte[] exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
-        PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
-        BufferedAsymmetricBlockCipher cipher = new BufferedAsymmetricBlockCipher(encoding);
-        cipher.init(true, cipherParameters);
-
-        int bufferSize = encoding.getInputBlockSize();
-
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
+        int bufferSize = getCipher(cipherParameters).getInputBlockSize();
         byte[][] chunks = Tools.chunkArray(readableText, bufferSize);
         ProcessLogger processLogger = new ProcessLogger(LOGGER, chunks.length);
-        for (byte[] oneChunk : chunks) {
-            processLogger.logNextStep("Encryption");
-            cipher.processBytes(oneChunk, 0, Math.min(bufferSize, oneChunk.length));
-            Hex.encode(cipher.doFinal(), outputStream);
-        }
+        Arrays.stream(chunks).parallel()
+                .map(bytes -> processBytes(bytes, cipherParameters, processLogger))
+                .collect(Collectors.toList())
+                .forEach(bytes -> writeBytes(outputStream, bytes));
         LOGGER.info("Encryption finished.");
 
         outputStream.flush();
         return outputStream.toByteArray();
     }
 
+    private byte[] processBytes(byte[] bytes, CipherParameters cipherParameters, ProcessLogger processLogger) {
+        BufferedAsymmetricBlockCipher cipher = getCipher(cipherParameters);
+        cipher.processBytes(bytes, 0, bytes.length);
+        try {
+            processLogger.logNextStep("Encryption");
+            return cipher.doFinal();
+        } catch (InvalidCipherTextException e) {
+            LOGGER.error(e);
+            return new byte[0];
+        }
+    }
+
+    private void writeBytes(ByteArrayOutputStream outputStream, byte[] bytes) {
+        try {
+            Hex.encode(bytes, outputStream);
+        } catch (IOException e) {
+            LOGGER.error(e);
+        }
+    }
+
+    private BufferedAsymmetricBlockCipher getCipher(CipherParameters cipherParameters) {
+        PKCS1Encoding encoding = new PKCS1Encoding(new RSAEngine());
+        BufferedAsymmetricBlockCipher cipher = new BufferedAsymmetricBlockCipher(encoding);
+        cipher.init(true, cipherParameters);
+        return cipher;
+    }
 }
