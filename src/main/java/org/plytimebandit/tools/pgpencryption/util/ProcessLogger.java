@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 public class ProcessLogger {
 
     private final Logger logger;
+    private final String taskName;
     private final int totalSteps;
 
     private int numberOfStepsToLog = 10;
@@ -12,8 +13,9 @@ public class ProcessLogger {
     private int loggedStepsCounter = 0;
     private int logInterval;
 
-    public ProcessLogger(Logger logger, int totalSteps) {
+    public ProcessLogger(Logger logger, String taskName, int totalSteps) {
         this.logger = logger;
+        this.taskName = taskName == null ? "" : taskName;
         this.totalSteps = totalSteps;
         init();
     }
@@ -33,14 +35,18 @@ public class ProcessLogger {
         }
     }
 
-    public synchronized void logNextStep(String message) {
+    public synchronized void logNextStep() {
         if (numberOfStepsToLog == 0) {
             return;
         }
 
         stepCounter++;
         if (stepCounter % logInterval == 0 || stepCounter == totalSteps) {
-            logger.info(message + " {} %", ++loggedStepsCounter * (100 / numberOfStepsToLog));
+            logger.info(taskName + " {} %", ++loggedStepsCounter * (100 / numberOfStepsToLog));
         }
+    }
+
+    public void logFinished() {
+        logger.info("{} finished.", taskName);
     }
 }
