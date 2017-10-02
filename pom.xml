@@ -64,7 +64,7 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>c
+                <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version> <!-- version 2 is waaaaay faster than version 3 (< 3 sec. vs. ~ 1 min.) -->
                 <configuration>
                     <archive>
