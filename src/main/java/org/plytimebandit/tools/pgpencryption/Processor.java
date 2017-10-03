@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 
 import javax.inject.Inject;
 
@@ -15,6 +18,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.plytimebandit.tools.pgpencryption.sys.KeyTool;
 import org.plytimebandit.tools.pgpencryption.sys.PgpDecryptor;
@@ -101,6 +105,33 @@ class Processor {
         LOGGER.info("Done.");
     }
 
+    void encryptFile(String alias, String file, String keyStorePath, char[] password)
+            throws IOException, GeneralSecurityException, DecoderException, CryptoException {
+        File keyStoreFile = new File(keyStorePath);
+        if (!keyStoreFile.exists()) {
+            LOGGER.error(String.format("Key Store %s does not exist.", keyStorePath));
+            return;
+        }
+        if (!new File(file).exists()) {
+            LOGGER.error(String.format("File %s does not exist.", file));
+            return;
+        }
+        if (new File(file + ".enc").exists()) {
+            LOGGER.error(String.format("File %s already exists.", file + ".enc"));
+            return;
+        }
+
+        PublicKey publicKey = keyTool.getPublicKeyFromKeyStore(keyStoreFile, alias, password);
+
+        LOGGER.info(String.format("Encrypting file %s...", file));
+        byte[] encryptedData = pgpEncryptor.encrypt(new File(file)).withKey(publicKey);
+
+        LOGGER.info(String.format("Writing output file %s...", file + ".enc"));
+        writeToFile(encryptedData, Paths.get(file + ".enc"));
+
+        LOGGER.info("Done.");
+    }
+
     void decryptFile(String key, String file) throws IOException, DecoderException, InvalidCipherTextException {
         File keyFile = new File(key);
         if (!keyFile.exists()) {
@@ -118,6 +149,33 @@ class Processor {
 
         LOGGER.info(String.format("Decrypting file %s...", file));
         byte[] decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(keyFile);
+
+        LOGGER.info(String.format("Writing output file %s...", file + ".dec"));
+        writeToFile(decryptedData, Paths.get(file + ".dec"));
+
+        LOGGER.info("Done.");
+    }
+
+    void decryptFile(String alias, String file, String keyStorePath, char[] password)
+            throws IOException, GeneralSecurityException, DecoderException, CryptoException {
+        File keyStoreFile = new File(keyStorePath);
+        if (!keyStoreFile.exists()) {
+            LOGGER.error(String.format("Key Store %s does not exist.", keyStorePath));
+            return;
+        }
+        if (!new File(file).exists()) {
+            LOGGER.error(String.format("File %s does not exist.", file));
+            return;
+        }
+        if (new File(file + ".dec").exists()) {
+            LOGGER.error(String.format("File %s already exists.", file + ".dec"));
+            return;
+        }
+
+        Key privateKey = keyTool.getPrivateKeyFromKeyStore(keyStoreFile, alias, password);
+
+        LOGGER.info(String.format("Decrypting file %s...", file));
+        byte[] decryptedData = pgpDecryptor.decrypt(new File(file)).withKey(privateKey);
 
         LOGGER.info(String.format("Writing output file %s...", file + ".dec"));
         writeToFile(decryptedData, Paths.get(file + ".dec"));

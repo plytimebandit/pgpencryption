@@ -1,14 +1,20 @@
 package org.plytimebandit.tools.pgpencryption.sys;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
 import javax.inject.Inject;
 
@@ -61,6 +67,24 @@ public class KeyTool {
 
     public AsymmetricKeyParameter convertToPrivateKey(Key privateKey) throws IOException {
         return PrivateKeyFactory.createKey(privateKey.getEncoded());
+    }
+
+    public PublicKey getPublicKeyFromKeyStore(File keyStoreFile, String alias, char[] password)
+            throws KeyStoreException, IOException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException {
+        KeyStore keyStore = getKeyStore(keyStoreFile, password);
+        return keyStore.getCertificate(alias).getPublicKey();
+    }
+
+    public Key getPrivateKeyFromKeyStore(File keyStoreFile, String alias, char[] password)
+            throws NoSuchAlgorithmException, CertificateException, NoSuchProviderException, KeyStoreException, IOException, UnrecoverableKeyException {
+        KeyStore keyStore = getKeyStore(keyStoreFile, password);
+        return keyStore.getKey(alias, password);
+    }
+
+    private KeyStore getKeyStore(File keyStoreFile, char[] password) throws KeyStoreException, NoSuchProviderException, IOException, NoSuchAlgorithmException, CertificateException {
+        KeyStore keyStore = KeyStore.getInstance("JKS", "SUN");
+        keyStore.load(new FileInputStream(keyStoreFile), password);
+        return keyStore;
     }
 
     @Inject
