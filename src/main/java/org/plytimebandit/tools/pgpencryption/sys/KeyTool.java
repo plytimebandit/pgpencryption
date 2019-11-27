@@ -43,6 +43,10 @@ public class KeyTool {
         return convertToString(keyPair.getPublic());
     }
 
+    public byte[] convertPublicKeyToBytes(KeyPair keyPair) {
+        return keyPair.getPublic().getEncoded();
+    }
+
     public String convertPrivateKeyToString(KeyPair keyPair) {
         return convertToString(keyPair.getPrivate());
     }
@@ -58,6 +62,10 @@ public class KeyTool {
 
     public CipherParameters convertToPublicKey(Key publicKey) throws IOException {
         return PublicKeyFactory.createKey(publicKey.getEncoded());
+    }
+
+    public CipherParameters convertToPublicKey(byte[] publicKey) throws IOException {
+        return PublicKeyFactory.createKey(publicKey);
     }
 
     public AsymmetricKeyParameter convertToPrivateKey(File privateKeyFile) throws IOException {

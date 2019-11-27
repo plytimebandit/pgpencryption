@@ -48,6 +48,10 @@ public class PgpEncryptor extends AbstractPgpEncryptorDecryptor {
         return exec(keyTool.convertToPublicKey(publicKey));
     }
 
+    public byte[] withKey(byte[] publicKey) throws IOException {
+        return exec(keyTool.convertToPublicKey(publicKey));
+    }
+
     private byte[] exec(CipherParameters cipherParameters) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 

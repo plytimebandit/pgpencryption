@@ -97,6 +97,23 @@ public class PgpEncryptionTest {
     }
 
     @Test
+    public void testEncryptionDecryptionEqualsInputAndOutputWithByteKey() throws Exception {
+        String readableText = "hello world!";
+
+        KeyPair keyPair = keyTool.createKeyPair();
+        byte[] pkBytes = keyTool.convertPublicKeyToBytes(keyPair);
+
+        byte[] enc = pgpEncryptor
+                .encrypt(readableText.getBytes(StandardCharsets.UTF_8))
+                .withKey(pkBytes);
+        byte[] dec = pgpDecryptor
+                .decrypt(enc)
+                .withKey(keyPair.getPrivate());
+
+        Assertions.assertThat(new String(dec, StandardCharsets.UTF_8)).isEqualTo(readableText);
+    }
+
+    @Test
     public void testSequentialCreatedKeysAreNotEquals() throws Exception {
         KeyPair keyPair1 = keyTool.createKeyPair();
         KeyPair keyPair2 = keyTool.createKeyPair();
