@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.encoders.Hex;
 import org.plytimebandit.tools.pgpencryption.util.ProcessLogger;
 import org.plytimebandit.tools.pgpencryption.util.Tools;
@@ -41,15 +40,15 @@ public class PgpEncryptor extends AbstractPgpEncryptorDecryptor {
         return this;
     }
 
-    public byte[] withKey(File keyFile) throws IOException, InvalidCipherTextException {
+    public byte[] withKey(File keyFile) throws IOException {
         return exec(keyTool.convertToPublicKey(keyFile));
     }
 
-    public byte[] withKey(Key publicKey) throws IOException, InvalidCipherTextException {
+    public byte[] withKey(Key publicKey) throws IOException {
         return exec(keyTool.convertToPublicKey(publicKey));
     }
 
-    private byte[] exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException {
+    private byte[] exec(CipherParameters cipherParameters) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         int bufferSize = getCipherForEncryption(cipherParameters).getInputBlockSize();

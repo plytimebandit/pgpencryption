@@ -9,12 +9,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.encoders.Hex;
 import org.plytimebandit.tools.pgpencryption.util.ProcessLogger;
 import org.plytimebandit.tools.pgpencryption.util.Tools;
@@ -42,15 +40,15 @@ public class PgpDecryptor extends AbstractPgpEncryptorDecryptor {
         return this;
     }
 
-    public byte[] withKey(File keyFile) throws IOException, DecoderException, InvalidCipherTextException {
+    public byte[] withKey(File keyFile) throws IOException {
         return exec(keyTool.convertToPrivateKey(keyFile));
     }
 
-    public byte[] withKey(Key privateKey) throws DecoderException, IOException, InvalidCipherTextException {
+    public byte[] withKey(Key privateKey) throws IOException {
         return exec(keyTool.convertToPrivateKey(privateKey));
     }
 
-    private byte[] exec(CipherParameters cipherParameters) throws IOException, InvalidCipherTextException, DecoderException {
+    private byte[] exec(CipherParameters cipherParameters) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         int bufferSize = getCipherForDecryption(cipherParameters).getInputBlockSize();
