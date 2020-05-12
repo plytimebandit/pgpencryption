@@ -7,7 +7,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,7 +84,7 @@ public class PgpEncryption {
         }
     }
 
-    char[] readPassword() throws IOException {
+    char[] readPassword() {
         Console console = System.console();
         if (console == null) {
             String message = "Cannot ask for password. Are you running program from console?";

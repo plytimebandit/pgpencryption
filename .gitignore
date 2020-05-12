@@ -185,3 +185,10 @@ hs_err_pid*
 
 .idea/
 *.iml
+
+##############
+
+pgp.key
+pgp.pub
+*.enc
+*.dec

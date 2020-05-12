@@ -15,3 +15,18 @@ There are just three scenarios:
 - decrypt file
 
 That's it. Have fun.
+
+
+## Further information
+
+### Key Store
+
+To use a key store which is compatible with this tool you can use following command:
+
+    keytool -keystore thisIsMyKeyStore.ks -genkey -alias client -keyalg rsa
+
+### Dependency Checker
+
+The dependency checker is not bound to mavens verify phase. Run it explicitly using:
+
+    mvn org.owasp:dependency-check-maven:check
