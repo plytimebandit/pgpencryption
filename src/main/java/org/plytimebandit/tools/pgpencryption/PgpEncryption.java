@@ -1,31 +1,53 @@
 package org.plytimebandit.tools.pgpencryption;
 
-import java.io.Console;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.inject.Inject;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import picocli.CommandLine;
 
-public class PgpEncryption {
+import javax.inject.Inject;
+import java.io.Console;
+import java.util.concurrent.Callable;
+
+@CommandLine.Command(
+        name = "PGP Encryption",
+        description = "PGP Encryption can be used to encrypt and decrypt files.")
+public class PgpEncryption implements Callable<Integer> {
 
     private static final Logger PLAIN_LOGGER = LogManager.getLogger("plain_logger");
     private static final Logger LOGGER = LogManager.getLogger(PgpEncryption.class);
 
-    private Processor processor;
+    private final Processor processor;
+
+    @CommandLine.Option(names = "-h", paramLabel = "help", usageHelp = true, description = "Show help.")
+    boolean usageHelpRequested;
+
+    @CommandLine.Option(names = "-c", paramLabel = "create key pair", description = "Create keys and put them into this output folder.")
+    String createKeysToTargetDir;
+
+    @CommandLine.Option(names = "-e", paramLabel = "encryption key", description = "Encrypt file with public key. If -k is given -e names the alias of the key store. Used in combination with -f.")
+    String publicKeyOrKeyStoreAlias;
+
+    @CommandLine.Option(names = "-d", paramLabel = "decryption key", description = "Decrypt file with private key. If -k is given -d names the alias of the key store. Used in combination with -f.")
+    String privateKeyOrKeyStoreAlias;
+
+    @CommandLine.Option(names = "-f", paramLabel = "file", description = "File to encrypt or decrypt.")
+    String fileNameToProcess;
+
+    @CommandLine.Option(names = "-k", paramLabel = "key store", description = "Key Store that holds private and public keys.")
+    String keyStore;
+
+    private CommandLine commandLine;
 
     public static void main(String... args) {
         Injector injector = Guice.createInjector(new AppModule());
 
         PgpEncryption pgpEncryption = injector.getInstance(PgpEncryption.class);
-        pgpEncryption.process(Arrays.asList(args));
+
+        int exitCode = pgpEncryption.parseArgsAndExecute(args);
+        System.exit(exitCode);
     }
 
     @Inject
@@ -33,46 +55,46 @@ public class PgpEncryption {
         this.processor = processor;
     }
 
-    void process(List<String> arguments) {
-        if (CollectionUtils.isEmpty(arguments) || arguments.size() < 2) {
+    int parseArgsAndExecute(String... args) {
+        commandLine = new CommandLine(this);
+        commandLine.parseArgs(args);
+        if (usageHelpRequested) {
+            printUsage();
+            return 0;
+        }
+        return commandLine.execute(args);
+    }
+
+    @Override
+    public Integer call() {
+        process();
+        return 0;
+    }
+
+    private void process() {
+        if (StringUtils.isAllBlank(createKeysToTargetDir, publicKeyOrKeyStoreAlias, privateKeyOrKeyStoreAlias,
+                fileNameToProcess, keyStore)) {
             printUsage();
             return;
         }
 
-        int createIndex = arguments.indexOf("-c");
-        int encryptIndex = arguments.indexOf("-e");
-        int decryptIndex = arguments.indexOf("-d");
-        int fileIndex = arguments.indexOf("-f");
-        int keyStoreIndex = arguments.indexOf("-k");
-
         try {
-            if (createIndex >= 0) {
-                String outputPath = arguments.get(createIndex + 1);
-                processor.createKeys(outputPath);
+            if (StringUtils.isNotBlank(createKeysToTargetDir)) {
+                processor.createKeys(createKeysToTargetDir);
 
-            } else if (keyStoreIndex >= 0 && encryptIndex >= 0 && fileIndex >= 0 && arguments.size() >= 6) {
-                String keyStore = arguments.get(keyStoreIndex + 1);
-                String alias = arguments.get(encryptIndex + 1);
-                String file = arguments.get(fileIndex + 1);
+            } else if (StringUtils.isNoneBlank(keyStore, publicKeyOrKeyStoreAlias, fileNameToProcess)) {
                 char[] password = readPassword();
-                processor.encryptFile(alias, file, keyStore, password);
+                processor.encryptFile(publicKeyOrKeyStoreAlias, fileNameToProcess, keyStore, password);
 
-            } else if (keyStoreIndex >= 0 && decryptIndex >= 0 && fileIndex >= 0 && arguments.size() >= 6) {
-                String keyStore = arguments.get(keyStoreIndex + 1);
-                String alias = arguments.get(decryptIndex + 1);
-                String file = arguments.get(fileIndex + 1);
+            } else if (StringUtils.isNoneBlank(keyStore, privateKeyOrKeyStoreAlias, fileNameToProcess)) {
                 char[] password = readPassword();
-                processor.decryptFile(alias, file, keyStore, password);
+                processor.decryptFile(privateKeyOrKeyStoreAlias, fileNameToProcess, keyStore, password);
 
-            } else if (encryptIndex >= 0 && fileIndex >= 0 && arguments.size() >= 4) {
-                String key = arguments.get(encryptIndex + 1);
-                String file = arguments.get(fileIndex + 1);
-                processor.encryptFile(key, file);
+            } else if (StringUtils.isNoneBlank(publicKeyOrKeyStoreAlias, fileNameToProcess)) {
+                processor.encryptFile(publicKeyOrKeyStoreAlias, fileNameToProcess);
 
-            } else if (decryptIndex >= 0 && fileIndex >= 0 && arguments.size() >= 4) {
-                String key = arguments.get(decryptIndex + 1);
-                String file = arguments.get(fileIndex + 1);
-                processor.decryptFile(key, file);
+            } else if (StringUtils.isNoneBlank(privateKeyOrKeyStoreAlias, fileNameToProcess)) {
+                processor.decryptFile(privateKeyOrKeyStoreAlias, fileNameToProcess);
 
             } else {
                 LOGGER.error("Unrecognized parameters.");
@@ -95,12 +117,7 @@ public class PgpEncryption {
     }
 
     void printUsage() {
-        PLAIN_LOGGER.error("Usage:");
-        PLAIN_LOGGER.error("  -c [output folder]: Create keys and put them into this output folder.");
-        PLAIN_LOGGER.error("  -e [key]: Encrypt file with public key. If -k is given -e names the alias of the key store. Used in combination with -f.");
-        PLAIN_LOGGER.error("  -d [key]: Decrypt file with private key. If -k is given -d names the alias of the key store. Used in combination with -f.");
-        PLAIN_LOGGER.error("  -f [input file]: File to encrypt or decrypt.");
-        PLAIN_LOGGER.error("  -k [key store]: Key Store that holds private and public keys.");
+        PLAIN_LOGGER.warn(commandLine.getUsageMessage());
     }
 
 }

@@ -1,28 +1,7 @@
 package org.plytimebandit.tools.pgpencryption;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.interfaces.RSAKey;
-import java.util.Arrays;
-import java.util.Collections;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -35,8 +14,18 @@ import org.plytimebandit.tools.pgpencryption.sys.KeyTool;
 import org.plytimebandit.tools.pgpencryption.sys.PgpDecryptor;
 import org.plytimebandit.tools.pgpencryption.sys.PgpEncryptor;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAKey;
 
 public class PgpEncryptionTest {
 
@@ -47,7 +36,7 @@ public class PgpEncryptionTest {
     private KeyTool keyTool;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         Injector injector = Guice.createInjector(new AppModule());
         pgpDecryptor = injector.getInstance(PgpDecryptor.class);
         pgpEncryptor = injector.getInstance(PgpEncryptor.class);
@@ -257,16 +246,8 @@ public class PgpEncryptionTest {
     public void testStartParametersEmpty() throws Exception {
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy();
 
-        pgpEncryptionSpy.process(Collections.emptyList());
-
-        Mockito.verify(pgpEncryptionSpy).printUsage();
-    }
-
-    @Test
-    public void testStartParametersNull() throws Exception {
-        PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy();
-
-        pgpEncryptionSpy.process(null);
+        String[] emptyArray = {};
+        pgpEncryptionSpy.parseArgsAndExecute(emptyArray);
 
         Mockito.verify(pgpEncryptionSpy).printUsage();
     }
@@ -276,7 +257,7 @@ public class PgpEncryptionTest {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
 
-        pgpEncryptionSpy.process(Arrays.asList("-c", "output"));
+        pgpEncryptionSpy.parseArgsAndExecute("-c", "output");
 
         Mockito.verify(pgpEncryptionSpy, Mockito.never()).printUsage();
         Mockito.verify(processorMock).createKeys(ArgumentMatchers.anyString());
@@ -287,7 +268,7 @@ public class PgpEncryptionTest {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
 
-        pgpEncryptionSpy.process(Arrays.asList("-e", "key", "-f", "file"));
+        pgpEncryptionSpy.parseArgsAndExecute("-e", "key", "-f", "file");
 
         Mockito.verify(pgpEncryptionSpy, Mockito.never()).printUsage();
         Mockito.verify(processorMock).encryptFile(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
@@ -298,7 +279,7 @@ public class PgpEncryptionTest {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
 
-        pgpEncryptionSpy.process(Arrays.asList("-d", "key", "-f", "file"));
+        pgpEncryptionSpy.parseArgsAndExecute("-d", "key", "-f", "file");
 
         Mockito.verify(pgpEncryptionSpy, Mockito.never()).printUsage();
         Mockito.verify(processorMock).decryptFile(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
@@ -309,7 +290,7 @@ public class PgpEncryptionTest {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
 
-        pgpEncryptionSpy.process(Arrays.asList("-k", "keystore", "-e", "key", "-f", "file"));
+        pgpEncryptionSpy.parseArgsAndExecute("-k", "keystore", "-e", "key", "-f", "file");
 
         Mockito.verify(pgpEncryptionSpy, Mockito.never()).printUsage();
         Mockito.verify(processorMock).encryptFile(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.any());
@@ -320,17 +301,27 @@ public class PgpEncryptionTest {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
 
-        pgpEncryptionSpy.process(Arrays.asList("-k", "keystore", "-d", "key", "-f", "file"));
+        pgpEncryptionSpy.parseArgsAndExecute("-k", "keystore", "-d", "key", "-f", "file");
 
         Mockito.verify(pgpEncryptionSpy, Mockito.never()).printUsage();
         Mockito.verify(processorMock).decryptFile(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testHelpParameter() {
+        Processor processorMock = Mockito.mock(Processor.class);
+        PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);
+
+        pgpEncryptionSpy.parseArgsAndExecute("-h");
+
+        Mockito.verify(pgpEncryptionSpy).printUsage();
     }
 
     private PgpEncryption createPgpEncryptionSpy() throws Exception {
         return createPgpEncryptionSpy(createProcessorMock());
     }
 
-    private PgpEncryption createPgpEncryptionSpy(Processor processorMock) throws IOException {
+    private PgpEncryption createPgpEncryptionSpy(Processor processorMock) {
         PgpEncryption pgpEncryptionSpy = Mockito.spy(new PgpEncryption(processorMock));
         Mockito.doNothing().when(pgpEncryptionSpy).printUsage();
         Mockito.doAnswer(invocationOnMock -> new char[0]).when(pgpEncryptionSpy).readPassword();
