@@ -253,6 +253,15 @@ public class PgpEncryptionTest {
     }
 
     @Test
+    public void testStartParametersNotExclusively() throws Exception {
+        PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy();
+
+        pgpEncryptionSpy.parseArgsAndExecute("-c", "x", "-e", "y");
+
+        Mockito.verify(pgpEncryptionSpy).printUsage();
+    }
+
+    @Test
     public void testStartParametersCreateKeys() throws Exception {
         Processor processorMock = Mockito.mock(Processor.class);
         PgpEncryption pgpEncryptionSpy = createPgpEncryptionSpy(processorMock);

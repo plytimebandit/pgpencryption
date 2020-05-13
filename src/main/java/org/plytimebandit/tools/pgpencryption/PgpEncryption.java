@@ -24,20 +24,44 @@ public class PgpEncryption implements Callable<Integer> {
     @CommandLine.Option(names = "-h", paramLabel = "help", usageHelp = true, description = "Show help.")
     boolean usageHelpRequested;
 
-    @CommandLine.Option(names = "-c", paramLabel = "create key pair", description = "Create keys and put them into this output folder.")
-    String createKeysToTargetDir;
+    @CommandLine.ArgGroup(multiplicity = "1")
+    ArgumentTasks argumentTasks;
 
-    @CommandLine.Option(names = "-e", paramLabel = "encryption key", description = "Encrypt file with public key. If -k is given -e names the alias of the key store. Used in combination with -f.")
-    String publicKeyOrKeyStoreAlias;
+    static class ArgumentTasks {
+        @CommandLine.Option(
+                names = "-c",
+                paramLabel = "create key pair into this directory",
+                required = true,
+                description = "Create keys and put them into this output folder.")
+        String createKeysToTargetDir;
 
-    @CommandLine.Option(names = "-d", paramLabel = "decryption key", description = "Decrypt file with private key. If -k is given -d names the alias of the key store. Used in combination with -f.")
-    String privateKeyOrKeyStoreAlias;
+        @CommandLine.Option(
+                names = "-e",
+                paramLabel = "public key or key store alias",
+                required = true,
+                description = "Encrypt file with public key. If -k is given -e names the alias of the key store. Used in combination with -f."
+        )
+        String encryptionKeyOrAlias;
 
-    @CommandLine.Option(names = "-f", paramLabel = "file", description = "File to encrypt or decrypt.")
-    String fileNameToProcess;
+        @CommandLine.Option(
+                names = "-d",
+                paramLabel = "private key or key store alias",
+                required = true,
+                description = "Decrypt file with private key. If -k is given -d names the alias of the key store. Used in combination with -f."
+        )
+        String decryptionKeyOrAlias;
+    }
 
-    @CommandLine.Option(names = "-k", paramLabel = "key store", description = "Key Store that holds private and public keys.")
+    @CommandLine.Option(names = "-k",
+            paramLabel = "key store",
+            description = "Key Store that holds private and public keys.")
     String keyStore;
+
+    @CommandLine.Option(
+            names = "-f",
+            paramLabel = "file",
+            description = "File to encrypt or decrypt.")
+    String fileNameToProcess;
 
     private CommandLine commandLine;
 
@@ -57,7 +81,11 @@ public class PgpEncryption implements Callable<Integer> {
 
     int parseArgsAndExecute(String... args) {
         commandLine = new CommandLine(this);
-        commandLine.parseArgs(args);
+        try {
+            commandLine.parseArgs(args);
+        } catch (CommandLine.ParameterException e) {
+            printUsage();
+        }
         if (usageHelpRequested) {
             printUsage();
             return 0;
@@ -73,22 +101,22 @@ public class PgpEncryption implements Callable<Integer> {
 
     private void process() {
         try {
-            if (StringUtils.isNotBlank(createKeysToTargetDir)) {
-                processor.createKeys(createKeysToTargetDir);
+            if (StringUtils.isNotBlank(argumentTasks.createKeysToTargetDir)) {
+                processor.createKeys(argumentTasks.createKeysToTargetDir);
 
-            } else if (StringUtils.isNoneBlank(keyStore, publicKeyOrKeyStoreAlias, fileNameToProcess)) {
+            } else if (StringUtils.isNoneBlank(keyStore, argumentTasks.encryptionKeyOrAlias, fileNameToProcess)) {
                 char[] password = readPassword();
-                processor.encryptFile(publicKeyOrKeyStoreAlias, fileNameToProcess, keyStore, password);
+                processor.encryptFile(argumentTasks.encryptionKeyOrAlias, fileNameToProcess, keyStore, password);
 
-            } else if (StringUtils.isNoneBlank(keyStore, privateKeyOrKeyStoreAlias, fileNameToProcess)) {
+            } else if (StringUtils.isNoneBlank(keyStore, argumentTasks.decryptionKeyOrAlias, fileNameToProcess)) {
                 char[] password = readPassword();
-                processor.decryptFile(privateKeyOrKeyStoreAlias, fileNameToProcess, keyStore, password);
+                processor.decryptFile(argumentTasks.decryptionKeyOrAlias, fileNameToProcess, keyStore, password);
 
-            } else if (StringUtils.isNoneBlank(publicKeyOrKeyStoreAlias, fileNameToProcess)) {
-                processor.encryptFile(publicKeyOrKeyStoreAlias, fileNameToProcess);
+            } else if (StringUtils.isNoneBlank(argumentTasks.encryptionKeyOrAlias, fileNameToProcess)) {
+                processor.encryptFile(argumentTasks.encryptionKeyOrAlias, fileNameToProcess);
 
-            } else if (StringUtils.isNoneBlank(privateKeyOrKeyStoreAlias, fileNameToProcess)) {
-                processor.decryptFile(privateKeyOrKeyStoreAlias, fileNameToProcess);
+            } else if (StringUtils.isNoneBlank(argumentTasks.decryptionKeyOrAlias, fileNameToProcess)) {
+                processor.decryptFile(argumentTasks.decryptionKeyOrAlias, fileNameToProcess);
 
             } else {
                 LOGGER.warn("Unrecognized parameters.");
