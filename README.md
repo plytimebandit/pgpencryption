@@ -1,4 +1,4 @@
-# pgpencryption
+# PGP Encryption
 
 This PGP encryption tool can be used to encrypt and decrypt files.
 
@@ -18,6 +18,10 @@ That's it. Have fun.
 
 
 ## Further information
+
+### Java version
+
+JDK 8 is necessary to run this tool.
 
 ### Key Store
 

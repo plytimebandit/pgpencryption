@@ -72,12 +72,6 @@ public class PgpEncryption implements Callable<Integer> {
     }
 
     private void process() {
-        if (StringUtils.isAllBlank(createKeysToTargetDir, publicKeyOrKeyStoreAlias, privateKeyOrKeyStoreAlias,
-                fileNameToProcess, keyStore)) {
-            printUsage();
-            return;
-        }
-
         try {
             if (StringUtils.isNotBlank(createKeysToTargetDir)) {
                 processor.createKeys(createKeysToTargetDir);
@@ -97,7 +91,7 @@ public class PgpEncryption implements Callable<Integer> {
                 processor.decryptFile(privateKeyOrKeyStoreAlias, fileNameToProcess);
 
             } else {
-                LOGGER.error("Unrecognized parameters.");
+                LOGGER.warn("Unrecognized parameters.");
                 printUsage();
             }
 
