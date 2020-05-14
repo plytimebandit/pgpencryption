@@ -84,7 +84,8 @@ public class PgpEncryption implements Callable<Integer> {
         try {
             commandLine.parseArgs(args);
         } catch (CommandLine.ParameterException e) {
-            printUsage();
+            printUsage(e);
+            return 0;
         }
         if (usageHelpRequested) {
             printUsage();
@@ -138,8 +139,12 @@ public class PgpEncryption implements Callable<Integer> {
         return console.readPassword("Key Store password: ");
     }
 
+    void printUsage(Exception e) {
+        PLAIN_LOGGER.warn(e.getLocalizedMessage());
+        printUsage();
+    }
+
     void printUsage() {
         PLAIN_LOGGER.warn(commandLine.getUsageMessage());
     }
-
 }
