@@ -39,4 +39,4 @@ To use a key store which is compatible with this tool you can use following comm
 
 The dependency checker is not bound to mavens verify phase. Run it explicitly using:
 
-    mvn org.owasp:dependency-check-maven:check
+    ./mvnw org.owasp:dependency-check-maven:check
