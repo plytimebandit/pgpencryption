@@ -3,7 +3,7 @@
 This PGP encryption tool can be used to encrypt and decrypt files.
 
 I tried to keep it simple.
-Just build the jar by executing e.g. `mvn clean verify`
+Just build the jar by executing e.g. `./mvnw clean verify`
 (the unit tests might take a while, so you might want to skip them)
 and run the jar by executing `java -jar pgpencryption-1.0-SNAPSHOT-jar-with-dependencies.jar`.
 This will show you the usage.
@@ -22,6 +22,12 @@ That's it. Have fun.
 ### Java version
 
 JDK 8 is necessary to run this tool.
+
+
+### Maven Toolchain
+
+You need a [toolchain](https://maven.apache.org/guides/mini/guide-using-toolchains.html#using-toolchains-in-your-project) with a `jdk` in version `1.8`.
+
 
 ### Key Store
 
