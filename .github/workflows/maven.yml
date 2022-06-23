@@ -24,3 +24,8 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: ./mvnw package --global-toolchains .github/toolchains.xml
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: pgpencryption.jar
+        path: target/pgpencryption-*-jar-with-dependencies.jar
