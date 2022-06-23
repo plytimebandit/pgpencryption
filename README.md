@@ -1,6 +1,7 @@
 # PGP Encryption
 
 ![build-status](https://github.com/plytimebandit/pgpencryption/actions/workflows/maven.yml/badge.svg)
+_[Download via Actions](https://github.com/plytimebandit/pgpencryption/actions)_
 
 This PGP encryption tool can be used to encrypt and decrypt files.
 
